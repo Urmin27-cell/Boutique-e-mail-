@@ -45,6 +45,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotStatus, setForgotStatus] = useState<string | null>(null);
+  const [successUserModal, setSuccessUserModal] = useState<UserProfile | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,16 +89,18 @@ export const AuthView: React.FC<AuthViewProps> = ({
     try {
       if (mode === 'signup') {
         const user = await signUpUser(nomComplet, cleanEmail, telephone, motDePasse);
-        setSuccessMsg("Votre compte a été créé avec succès ! Redirection en cours...");
+        setSuccessMsg("Votre compte a été créé avec succès !");
+        setSuccessUserModal(user);
         setTimeout(() => {
           onAuthSuccess(user);
-        }, 900);
+        }, 1300);
       } else {
         const user = await signInUser(cleanEmail, motDePasse);
-        setSuccessMsg("Connexion réussie ! Redirection...");
+        setSuccessMsg("Connexion réussie !");
+        setSuccessUserModal(user);
         setTimeout(() => {
           onAuthSuccess(user);
-        }, 600);
+        }, 1100);
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Une erreur est survenue lors de l'authentification.");
@@ -389,6 +392,30 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 {loading ? 'Envoi...' : 'Envoyer le lien de réinitialisation'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Animation Modal */}
+      {successUserModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner animate-bounce">
+              <CheckCircle className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-slate-900">
+                {mode === 'signup' ? 'Inscription Réussie !' : 'Connexion Réussie !'}
+              </h3>
+              <p className="text-xs text-slate-600">
+                Bienvenue, <strong className="text-slate-900">{successUserModal.nomComplet}</strong>. Redirection vers votre espace...
+              </p>
+            </div>
+            <div className="pt-2">
+              <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div className="bg-emerald-500 h-full animate-pulse w-full"></div>
+              </div>
+            </div>
           </div>
         </div>
       )}

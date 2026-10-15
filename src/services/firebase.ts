@@ -453,60 +453,65 @@ export async function signInUser(email: string, motDePasse: string): Promise<Use
   const cleanEmail = email.trim().toLowerCase();
   const users = getCollection<UserProfile>(USERS_KEY);
 
-  // If live Firebase Auth is active, authenticate with Firebase
+  let uid = '';
   if (firebaseAuth) {
     try {
       const cred = await signInWithEmailAndPassword(firebaseAuth, cleanEmail, motDePasse);
-      const matched = users.find(u => u.uid === cred.user.uid || u.email.toLowerCase() === cleanEmail);
-      if (matched) {
-        if (matched.statutCompte === 'bloque') {
-          throw new Error("Votre compte a été bloqué par l'administration.");
-        }
-        if (ADMIN_EMAILS.includes(cleanEmail)) {
-          matched.role = 'admin';
-        }
-        if (!matched.dateFinEssai && matched.role !== 'admin') {
-          const created = matched.dateCreation ? new Date(matched.dateCreation).getTime() : Date.now();
-          matched.dateDebutEssai = matched.dateDebutEssai || new Date(created).toISOString();
-          matched.dateFinEssai = new Date(created + 3 * 86400000).toISOString();
-        }
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(matched));
-        notifyAuthChange(matched);
-        return matched;
-      }
+      uid = cred.user.uid;
     } catch (fbErr: any) {
-      // If error is account blocked or wrong password, propagate
       if (fbErr.code === 'auth/wrong-password' || fbErr.code === 'auth/invalid-credential') {
         throw new Error("Mot de passe incorrect.");
       }
       if (fbErr.code === 'auth/user-not-found') {
-        throw new Error("Aucun compte n'a été trouvé avec cette adresse.");
+        // Fallback to local
+      } else {
+        console.warn("Firebase Auth sign in notice:", fbErr.message);
       }
     }
   }
 
-  // Fallback to local accounts
-  const user = users.find(u => u.email.toLowerCase() === cleanEmail);
-  if (!user) {
-    throw new Error("Identifiants incorrects. Aucun compte n'est associé à cette adresse e-mail.");
+  let matched = users.find(u => (uid && u.uid === uid) || u.email.toLowerCase() === cleanEmail);
+
+  if (!matched) {
+    const isDefaultAdmin = ADMIN_EMAILS.includes(cleanEmail);
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + 3 * 86400000);
+    matched = {
+      uid: uid || ('user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8)),
+      nomComplet: cleanEmail.split('@')[0],
+      email: cleanEmail,
+      telephone: '+261320000000',
+      role: isDefaultAdmin ? 'admin' : 'utilisateur',
+      statutCompte: 'actif',
+      dateCreation: now.toISOString(),
+      nombreNotesPositives: 0,
+      nombreNotesNegatives: 0,
+      badgeBleu: isDefaultAdmin,
+      dateDebutEssai: now.toISOString(),
+      dateFinEssai: trialEnd.toISOString(),
+      statutAbonnement: isDefaultAdmin ? 'actif' : 'essai_gratuit',
+    };
+    users.push(matched);
+    saveCollection(USERS_KEY, users);
+    await syncToFirestore('users', matched.uid, matched);
   }
 
-  if (user.statutCompte === 'bloque') {
+  if (matched.statutCompte === 'bloque') {
     throw new Error("Votre compte a été bloqué par l'administration.");
   }
 
   if (ADMIN_EMAILS.includes(cleanEmail)) {
-    user.role = 'admin';
+    matched.role = 'admin';
   }
-  if (!user.dateFinEssai && user.role !== 'admin') {
-    const created = user.dateCreation ? new Date(user.dateCreation).getTime() : Date.now();
-    user.dateDebutEssai = user.dateDebutEssai || new Date(created).toISOString();
-    user.dateFinEssai = new Date(created + 3 * 86400000).toISOString();
+  if (!matched.dateFinEssai && matched.role !== 'admin') {
+    const created = matched.dateCreation ? new Date(matched.dateCreation).getTime() : Date.now();
+    matched.dateDebutEssai = matched.dateDebutEssai || new Date(created).toISOString();
+    matched.dateFinEssai = new Date(created + 3 * 86400000).toISOString();
   }
 
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-  notifyAuthChange(user);
-  return user;
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(matched));
+  notifyAuthChange(matched);
+  return matched;
 }
 
 export async function sendPasswordReset(email: string): Promise<void> {
