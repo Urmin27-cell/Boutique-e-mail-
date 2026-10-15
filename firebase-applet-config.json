@@ -1,9 +1,9 @@
 {
-  "apiKey": "",
-  "authDomain": "",
-  "projectId": "",
-  "storageBucket": "",
-  "messagingSenderId": "",
-  "appId": "",
+  "apiKey": "AIzaSyA_DemoKeyForBoutiqueEmailPlatform12345",
+  "authDomain": "boutique-email-plateforme.firebaseapp.com",
+  "projectId": "boutique-email-plateforme",
+  "storageBucket": "boutique-email-plateforme.appspot.com",
+  "messagingSenderId": "4815162342",
+  "appId": "1:4815162342:web:abcdef9876543210",
   "firestoreDatabaseId": "(default)"
 }
