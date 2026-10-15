@@ -97,6 +97,23 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Configuration resolver
 export function getActiveFirebaseConfig() {
+  // 1. Check Vite / Vercel Environment Variables (.env)
+  try {
+    const envApiKey = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_FIREBASE_API_KEY : undefined;
+    if (envApiKey && envApiKey.trim() !== '') {
+      return {
+        apiKey: envApiKey,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+        appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+        firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || '(default)'
+      };
+    }
+  } catch {}
+
+  // 2. Check localStorage custom config
   const saved = localStorage.getItem('boutique_email_firebase_custom_config');
   if (saved) {
     try {
