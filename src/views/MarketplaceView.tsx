@@ -437,27 +437,19 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-100 text-[11px] text-blue-800 flex items-start gap-2">
-                  <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                {/* Auto-trigger reservation logic */}
+                {React.useEffect(() => {
+                  if (orderStep === 'details' && selectedListing && !createdOrder && !orderLoading) {
+                    handleConfirmPurchase();
+                  }
+                }, [orderStep])}
+
+                <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-100 text-[11px] text-blue-800 flex items-center justify-center gap-2">
+                  <Info className="w-4 h-4 text-blue-600 shrink-0" />
                   <span>
-                    En cliquant sur « Confirmer l'achat », l'annonce sera <strong>réservée</strong> pour vous afin d'empêcher tout autre acheteur de l'acquérir simultanément.
+                    Réservation automatique en cours...
                   </span>
                 </div>
-
-                <button
-                  onClick={handleConfirmPurchase}
-                  disabled={orderLoading}
-                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {orderLoading ? (
-                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>Confirmer l'achat & Réserver l'e-mail</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
               </div>
             )}
 

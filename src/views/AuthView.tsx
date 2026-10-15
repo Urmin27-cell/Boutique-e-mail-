@@ -91,6 +91,9 @@ export const AuthView: React.FC<AuthViewProps> = ({
         const user = await signUpUser(nomComplet, cleanEmail, telephone, motDePasse);
         setSuccessMsg("Votre compte a été créé avec succès !");
         setSuccessUserModal(user);
+        if (typeof window !== 'undefined' && (window as any).showAppToast) {
+          (window as any).showAppToast("Inscription Réussie !", "Votre compte a été créé avec succès. Bienvenue sur la plateforme !", "success");
+        }
         setTimeout(() => {
           onAuthSuccess(user);
         }, 1300);
@@ -98,6 +101,9 @@ export const AuthView: React.FC<AuthViewProps> = ({
         const user = await signInUser(cleanEmail, motDePasse);
         setSuccessMsg("Connexion réussie !");
         setSuccessUserModal(user);
+        if (typeof window !== 'undefined' && (window as any).showAppToast) {
+          (window as any).showAppToast("Connexion Réussie !", `Bienvenue de retour, ${user.nomComplet} !`, "success");
+        }
         setTimeout(() => {
           onAuthSuccess(user);
         }, 1100);

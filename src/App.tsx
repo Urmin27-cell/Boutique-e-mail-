@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { CheckCircle } from 'lucide-react';
 import { UserProfile, AppNotification } from './types';
 import {
   subscribeAuth,
@@ -38,6 +39,16 @@ export default function App() {
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [isFirebaseConfigModalOpen, setIsFirebaseConfigModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ title: string; message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  useEffect(() => {
+    (window as any).showAppToast = (title: string, message: string, type: 'success' | 'info' | 'error' = 'success') => {
+      setToast({ title, message, type });
+      setTimeout(() => {
+        setToast(null);
+      }, 4500);
+    };
+  }, []);
 
   // Subscribe to real-time auth state
   useEffect(() => {
@@ -279,6 +290,25 @@ export default function App() {
         isOpen={isFirebaseConfigModalOpen}
         onClose={() => setIsFirebaseConfigModalOpen(false)}
       />
+
+      {/* Global Floating Toast Notification Banner */}
+      {toast && (
+        <div className="fixed top-5 right-5 z-50 max-w-sm w-full bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700 animate-in slide-in-from-top-5 duration-300 flex items-start gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${toast.type === 'error' ? 'bg-red-500 text-white' : toast.type === 'info' ? 'bg-blue-500 text-white' : 'bg-emerald-500 text-white'}`}>
+            <CheckCircle className="w-5 h-5" />
+          </div>
+          <div className="flex-1 space-y-0.5">
+            <h4 className="font-extrabold text-sm">{toast.title}</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">{toast.message}</p>
+          </div>
+          <button
+            onClick={() => setToast(null)}
+            className="text-slate-400 hover:text-white text-xs font-bold p-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

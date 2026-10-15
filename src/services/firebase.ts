@@ -711,11 +711,13 @@ export async function getEmailListings(): Promise<EmailListing[]> {
   const users = getCollection<UserProfile>(USERS_KEY);
 
   return allListings.map(listing => {
-    const seller = users.find(u => u.uid === listing.vendeurUid);
-    if (seller && listing.statutAnnonce === 'disponible') {
-      const sub = checkSellerSubscriptionStatus(seller);
-      if (sub.isExpired) {
-        return { ...listing, statutAnnonce: 'masque' as const };
+    if (listing.statutAnnonce === 'disponible') {
+      const seller = users.find(u => u.uid === listing.vendeurUid);
+      if (seller) {
+        const sub = checkSellerSubscriptionStatus(seller);
+        if (sub.isExpired) {
+          return { ...listing, statutAnnonce: 'masque' as const };
+        }
       }
     }
     return listing;
