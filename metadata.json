@@ -1,0 +1,6 @@
+{
+  "name": "BOUTIQUE E-MAIL",
+  "description": "Plateforme sécurisée d'achat, de vente d'e-mails et de création d'adresses e-mails professionnelles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

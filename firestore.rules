@@ -1,0 +1,168 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Security Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'horlandobe@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Users
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId &&
+        request.resource.data.keys().hasAll(['uid', 'nomComplet', 'email', 'role', 'statutCompte', 'dateCreation']) &&
+        request.resource.data.role == 'utilisateur' &&
+        request.resource.data.statutCompte == 'actif';
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nomComplet', 'telephone', 'statutAbonnement', 'dateDebutEssai', 'dateFinEssai'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Email Listings
+    match /emailListings/{listingId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() &&
+        request.resource.data.vendeurUid == request.auth.uid &&
+        request.resource.data.prix > 0 &&
+        request.resource.data.statutAnnonce in ['disponible', 'reserve'];
+      allow update: if isAdmin() || (
+        isSignedIn() && (
+          request.resource.data.vendeurUid == request.auth.uid ||
+          // Allow buyer to update reservation if purchasing
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statutAnnonce', 'reservationCommandeId']))
+        )
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.vendeurUid == request.auth.uid);
+    }
+
+    // Encrypted Credentials (Email Passwords) - ZERO PUBLIC LEAK
+    match /credentials/{listingId} {
+      allow get: if isAdmin() ||
+        (isSignedIn() && resource.data.vendeurUid == request.auth.uid) ||
+        (isSignedIn() && resource.data.authorizedBuyerUid == request.auth.uid);
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.vendeurUid == request.auth.uid;
+      allow update: if isAdmin() ||
+        (isSignedIn() && resource.data.vendeurUid == request.auth.uid);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.vendeurUid == request.auth.uid);
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (
+        resource.data.acheteurUid == request.auth.uid ||
+        resource.data.vendeurUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.acheteurUid == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.acheteurUid == request.auth.uid ||
+        resource.data.vendeurUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Sales History
+    match /salesHistory/{saleId} {
+      allow get: if isSignedIn() && (
+        resource.data.acheteurUid == request.auth.uid ||
+        resource.data.vendeurUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && (
+        request.resource.data.vendeurUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // Seller Ratings
+    match /sellerRatings/{ratingId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.auteurUid == request.auth.uid &&
+        request.resource.data.vendeurUid != request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Subscription Requests
+    match /subscriptionRequests/{requestId} {
+      allow get: if isSignedIn() && (resource.data.utilisateurUid == request.auth.uid || isAdmin());
+      allow list: if isAdmin() || isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.utilisateurUid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Reactivation Requests
+    match /reactivationRequests/{requestId} {
+      allow get: if isSignedIn() && (resource.data.utilisateurUid == request.auth.uid || isAdmin());
+      allow list: if isAdmin() || isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.utilisateurUid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Email Pro Listings
+    match /emailProListings/{listingId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.prestataireUid == request.auth.uid;
+      allow update: if isAdmin() || (isSignedIn() && resource.data.prestataireUid == request.auth.uid);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.prestataireUid == request.auth.uid);
+    }
+
+    // Email Pro Orders
+    match /emailProOrders/{orderId} {
+      allow get: if isSignedIn() && (
+        resource.data.clientUid == request.auth.uid ||
+        resource.data.prestataireUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.clientUid == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.clientUid == request.auth.uid ||
+        resource.data.prestataireUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow get, list: if isSignedIn() && resource.data.destinataireUid == request.auth.uid;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && resource.data.destinataireUid == request.auth.uid;
+    }
+
+    // Admin Audit Logs
+    match /adminAuditLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

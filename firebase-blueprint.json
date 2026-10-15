@@ -1,0 +1,284 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Represents an authenticated user, seller, or administrator.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "nomComplet": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 120 },
+        "telephone": { "type": "string", "maxLength": 30 },
+        "role": { "type": "string", "enum": ["utilisateur", "vendeur", "admin"] },
+        "statutCompte": { "type": "string", "enum": ["actif", "suspendu", "bloque", "supprime"] },
+        "dateCreation": { "type": "string" },
+        "dateSuspension": { "type": "string" },
+        "motifSuspension": { "type": "string", "maxLength": 500 },
+        "nombreNotesPositives": { "type": "number" },
+        "nombreNotesNegatives": { "type": "number" },
+        "badgeBleu": { "type": "boolean" },
+        "dateDebutEssai": { "type": "string" },
+        "dateFinEssai": { "type": "string" },
+        "statutAbonnement": { "type": "string", "enum": ["aucun", "essai_gratuit", "en_attente_confirmation", "actif", "expire", "refuse"] },
+        "dateDebutAbonnement": { "type": "string" },
+        "dateFinAbonnement": { "type": "string" }
+      },
+      "required": ["uid", "nomComplet", "email", "role", "statutCompte", "dateCreation"]
+    },
+    "EmailListing": {
+      "title": "Email Listing",
+      "description": "An email account listed for sale on the marketplace.",
+      "type": "object",
+      "properties": {
+        "listingId": { "type": "string", "maxLength": 128 },
+        "vendeurUid": { "type": "string", "maxLength": 128 },
+        "vendeurNom": { "type": "string", "maxLength": 100 },
+        "vendeurTelephone": { "type": "string", "maxLength": 30 },
+        "adresseEmail": { "type": "string", "format": "email", "maxLength": 120 },
+        "adresseEmailNormalisee": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "prix": { "type": "number" },
+        "numeroPaiement": { "type": "string", "maxLength": 50 },
+        "nomTitulairePaiement": { "type": "string", "maxLength": 100 },
+        "statutAnnonce": { "type": "string", "enum": ["disponible", "reserve", "vendu", "masque", "suspendu"] },
+        "dateCreation": { "type": "string" },
+        "reservationCommandeId": { "type": "string", "maxLength": 128 },
+        "badgeBleuVendeur": { "type": "boolean" },
+        "notesPositives": { "type": "number" },
+        "notesNegatives": { "type": "number" }
+      },
+      "required": ["listingId", "vendeurUid", "adresseEmail", "prix", "statutAnnonce", "dateCreation"]
+    },
+    "EncryptedCredential": {
+      "title": "Encrypted Email Credential",
+      "description": "Secure storage of email account password, protected from public reads.",
+      "type": "object",
+      "properties": {
+        "listingId": { "type": "string", "maxLength": 128 },
+        "vendeurUid": { "type": "string", "maxLength": 128 },
+        "encryptedPassword": { "type": "string", "maxLength": 500 },
+        "authorizedBuyerUid": { "type": "string", "maxLength": 128 },
+        "orderId": { "type": "string", "maxLength": 128 },
+        "dateCreation": { "type": "string" }
+      },
+      "required": ["listingId", "vendeurUid", "encryptedPassword"]
+    },
+    "Order": {
+      "title": "Marketplace Order",
+      "description": "Represents an email purchase transaction with proof of payment.",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 128 },
+        "reference": { "type": "string", "maxLength": 50 },
+        "acheteurUid": { "type": "string", "maxLength": 128 },
+        "acheteurNom": { "type": "string", "maxLength": 100 },
+        "acheteurEmail": { "type": "string", "maxLength": 120 },
+        "vendeurUid": { "type": "string", "maxLength": 128 },
+        "vendeurNom": { "type": "string", "maxLength": 100 },
+        "listingId": { "type": "string", "maxLength": 128 },
+        "adresseEmailVendue": { "type": "string", "maxLength": 120 },
+        "prix": { "type": "number" },
+        "numeroPaiement": { "type": "string", "maxLength": 50 },
+        "nomTitulairePaiement": { "type": "string", "maxLength": 100 },
+        "preuvePaiementUrl": { "type": "string", "maxLength": 1000 },
+        "statutCommande": { "type": "string", "enum": ["en_attente_paiement", "en_attente_verification", "paiement_confirme", "paiement_refuse", "annulee"] },
+        "motifRefus": { "type": "string", "maxLength": 500 },
+        "dateCreation": { "type": "string" },
+        "datePaiementEnvoye": { "type": "string" },
+        "dateConfirmation": { "type": "string" },
+        "confirmedByUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["orderId", "acheteurUid", "vendeurUid", "listingId", "prix", "statutCommande", "dateCreation"]
+    },
+    "SalesHistory": {
+      "title": "Sales History Record",
+      "description": "Permanent trace of completed and confirmed email transactions.",
+      "type": "object",
+      "properties": {
+        "saleId": { "type": "string", "maxLength": 128 },
+        "orderId": { "type": "string", "maxLength": 128 },
+        "listingId": { "type": "string", "maxLength": 128 },
+        "vendeurUid": { "type": "string", "maxLength": 128 },
+        "vendeurNom": { "type": "string", "maxLength": 100 },
+        "acheteurUid": { "type": "string", "maxLength": 128 },
+        "acheteurNom": { "type": "string", "maxLength": 100 },
+        "adresseEmail": { "type": "string", "maxLength": 120 },
+        "prixFinal": { "type": "number" },
+        "dateVente": { "type": "string" },
+        "statutVente": { "type": "string" }
+      },
+      "required": ["saleId", "orderId", "listingId", "vendeurUid", "acheteurUid", "adresseEmail", "prixFinal", "dateVente"]
+    },
+    "SellerRating": {
+      "title": "Seller Rating",
+      "description": "Positive or negative feedback for a seller.",
+      "type": "object",
+      "properties": {
+        "ratingId": { "type": "string", "maxLength": 128 },
+        "vendeurUid": { "type": "string", "maxLength": 128 },
+        "auteurUid": { "type": "string", "maxLength": 128 },
+        "auteurNom": { "type": "string", "maxLength": 100 },
+        "orderId": { "type": "string", "maxLength": 128 },
+        "typeNote": { "type": "string", "enum": ["positive", "negative"] },
+        "dateCreation": { "type": "string" }
+      },
+      "required": ["ratingId", "vendeurUid", "auteurUid", "typeNote", "dateCreation"]
+    },
+    "SubscriptionRequest": {
+      "title": "Seller Subscription Request",
+      "description": "Monthly subscription request (2 500 Ar) with payment proof.",
+      "type": "object",
+      "properties": {
+        "requestId": { "type": "string", "maxLength": 128 },
+        "utilisateurUid": { "type": "string", "maxLength": 128 },
+        "utilisateurNom": { "type": "string", "maxLength": 100 },
+        "montant": { "type": "number" },
+        "preuvePaiementUrl": { "type": "string", "maxLength": 1000 },
+        "statut": { "type": "string", "enum": ["en_attente_confirmation", "actif", "refuse"] },
+        "motifRefus": { "type": "string", "maxLength": 500 },
+        "dateCreation": { "type": "string" },
+        "dateConfirmation": { "type": "string" },
+        "dateDebutAbonnement": { "type": "string" },
+        "dateFinAbonnement": { "type": "string" },
+        "adminUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["requestId", "utilisateurUid", "montant", "statut", "dateCreation"]
+    },
+    "ReactivationRequest": {
+      "title": "Account Reactivation Request",
+      "description": "Request to reactivate a suspended account (20 000 Ar).",
+      "type": "object",
+      "properties": {
+        "requestId": { "type": "string", "maxLength": 128 },
+        "utilisateurUid": { "type": "string", "maxLength": 128 },
+        "utilisateurNom": { "type": "string", "maxLength": 100 },
+        "montant": { "type": "number" },
+        "preuvePaiementUrl": { "type": "string", "maxLength": 1000 },
+        "statut": { "type": "string", "enum": ["en_attente_confirmation", "actif", "refuse"] },
+        "motifRefus": { "type": "string", "maxLength": 500 },
+        "dateCreation": { "type": "string" },
+        "dateConfirmation": { "type": "string" },
+        "adminUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["requestId", "utilisateurUid", "montant", "statut", "dateCreation"]
+    },
+    "EmailProListing": {
+      "title": "Email Pro Service Listing",
+      "description": "Professional custom email setup services offered by providers.",
+      "type": "object",
+      "properties": {
+        "listingId": { "type": "string", "maxLength": 128 },
+        "prestataireUid": { "type": "string", "maxLength": 128 },
+        "nomPrestataire": { "type": "string", "maxLength": 100 },
+        "contact": { "type": "string", "maxLength": 100 },
+        "prix": { "type": "number" },
+        "description": { "type": "string", "maxLength": 1000 },
+        "statut": { "type": "string", "enum": ["disponible", "masque"] },
+        "dateCreation": { "type": "string" }
+      },
+      "required": ["listingId", "prestataireUid", "nomPrestataire", "contact", "prix", "description", "dateCreation"]
+    },
+    "EmailProOrder": {
+      "title": "Email Pro Service Order",
+      "description": "Client order for professional email creation.",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 128 },
+        "reference": { "type": "string", "maxLength": 50 },
+        "clientUid": { "type": "string", "maxLength": 128 },
+        "clientNom": { "type": "string", "maxLength": 100 },
+        "prestataireUid": { "type": "string", "maxLength": 128 },
+        "nomPrestataire": { "type": "string", "maxLength": 100 },
+        "domaineDemande": { "type": "string", "maxLength": 150 },
+        "contactClient": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "prix": { "type": "number" },
+        "statut": { "type": "string", "enum": ["en_attente", "en_cours", "termine", "annule"] },
+        "dateCreation": { "type": "string" }
+      },
+      "required": ["orderId", "clientUid", "prestataireUid", "domaineDemande", "contactClient", "prix", "statut", "dateCreation"]
+    },
+    "Notification": {
+      "title": "In-App Notification",
+      "description": "Internal notifications for orders, reviews, suspensions, and subscriptions.",
+      "type": "object",
+      "properties": {
+        "notificationId": { "type": "string", "maxLength": 128 },
+        "destinataireUid": { "type": "string", "maxLength": 128 },
+        "titre": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 500 },
+        "type": { "type": "string", "enum": ["commande", "paiement", "validation", "suspension", "abonnement", "info"] },
+        "lu": { "type": "boolean" },
+        "dateCreation": { "type": "string" },
+        "referenceDocumentId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["notificationId", "destinataireUid", "titre", "message", "lu", "dateCreation"]
+    },
+    "AdminAuditLog": {
+      "title": "Admin Audit Log",
+      "description": "Traceability log of sensitive administrator actions.",
+      "type": "object",
+      "properties": {
+        "logId": { "type": "string", "maxLength": 128 },
+        "adminUid": { "type": "string", "maxLength": 128 },
+        "adminEmail": { "type": "string", "maxLength": 120 },
+        "action": { "type": "string", "maxLength": 100 },
+        "cibleUid": { "type": "string", "maxLength": 128 },
+        "referenceDocumentId": { "type": "string", "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 500 },
+        "dateCreation": { "type": "string" }
+      },
+      "required": ["logId", "adminUid", "action", "dateCreation"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile collection."
+    },
+    "/emailListings/{listingId}": {
+      "schema": { "$ref": "#/entities/EmailListing" },
+      "description": "Email marketplace listings."
+    },
+    "/credentials/{credentialId}": {
+      "schema": { "$ref": "#/entities/EncryptedCredential" },
+      "description": "Protected email credentials, accessible only to seller, authorized buyer after confirmed payment, or admin."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Email purchase orders with payment receipts."
+    },
+    "/salesHistory/{saleId}": {
+      "schema": { "$ref": "#/entities/SalesHistory" },
+      "description": "Permanent trace of completed email transactions."
+    },
+    "/sellerRatings/{ratingId}": {
+      "schema": { "$ref": "#/entities/SellerRating" },
+      "description": "Ratings left by buyers for sellers."
+    },
+    "/subscriptionRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/SubscriptionRequest" },
+      "description": "Seller subscription requests (2 500 Ar / month)."
+    },
+    "/reactivationRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/ReactivationRequest" },
+      "description": "Account reactivation requests (20 000 Ar)."
+    },
+    "/emailProListings/{listingId}": {
+      "schema": { "$ref": "#/entities/EmailProListing" },
+      "description": "Professional email creation services."
+    },
+    "/emailProOrders/{orderId}": {
+      "schema": { "$ref": "#/entities/EmailProOrder" },
+      "description": "Orders for professional email creation services."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User in-app notifications."
+    },
+    "/adminAuditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminAuditLog" },
+      "description": "Audit trail for admin actions."
+    }
+  }
+}
