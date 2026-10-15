@@ -623,6 +623,16 @@ export function checkSellerSubscriptionStatus(seller: UserProfile | null | undef
     };
   }
 
+  // 1.5. Pending subscription confirmation (Abonnement en cours de validation)
+  if (seller.statutAbonnement === 'en_attente_confirmation') {
+    return {
+      canSell: true,
+      isExpired: false,
+      daysRemaining: 30,
+      message: "Abonnement en cours de validation par l'administrateur"
+    };
+  }
+
   // 2. Active paid subscription (2 500 Ar / mois)
   if (seller.statutAbonnement === 'actif' && seller.dateFinAbonnement) {
     const end = new Date(seller.dateFinAbonnement).getTime();
@@ -706,6 +716,11 @@ export async function addEmailListing(params: {
   }
   if (params.prix <= 0) {
     throw new Error("Le prix doit être supérieur à zéro Ariary.");
+  }
+
+  const sub = checkSellerSubscriptionStatus(params.vendeur);
+  if (!sub.canSell) {
+    throw new Error(sub.message);
   }
 
   const listings = getCollection<EmailListing>(LISTINGS_KEY);
